@@ -1,0 +1,461 @@
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script> 
+ 
+	<script type="text/javascript">
+	/*
+	var agregarOpcionesCombo = function($combo,arrValores){
+		try{
+			var o = new Option(null, null);
+			/// jquerify the DOM object 'o' so we can use the html method
+			$(o).html('( seleccione )');
+			$combo.append(o);			
+			for (arrValores_key in arrValores) {
+				var o = new Option(arrValores_key, arrValores_key);
+				$(o).html(arrValores[arrValores_key]);
+				$combo.append(o);			
+			}
+			return true;
+		}catch(ex){ alert(ex);}
+		return false;
+	}	
+	*/
+	var agregarOpcionCombo = function($combo,valor,texto){
+		var resultado = null;
+		try{
+			var o = new Option(valor, valor);
+			$(o).html(texto);
+			$combo.append(o);
+			resultado = o ;
+		}catch(ex){ alert(ex);}
+		return resultado;
+	}
+	
+	var obtenerDataComboSelectedOption = function($combo){
+		var resultado = null ;
+		try{
+			var $opciones = $combo.find("option");
+			$opciones.each(function(){
+				var $opcion = $(this) ;
+				if($opcion.val() == $combo.val()){
+					resultado = jQuery.data(this);
+				}
+			});
+		}catch(ex){alert(ex);}
+		return resultado;
+	}
+	
+	var ajustarVisibilidadControles = function($input) {
+		try{
+			var visibilidad = true ;
+			var encontrado = false
+			// Recorro los elementos del formulario
+			$('form input, form select').each(
+				function(index){  
+					var $arrItem = $(this);
+					
+						var $arrItem_tr = $arrItem.closest("tr") ;
+						if($arrItem.attr("name") == $input.attr("name") ) {
+							encontrado = true;
+						}else if(encontrado){
+							visibilidad = false ;
+						}
+						
+						if(visibilidad && $arrItem.hasClass('ocultar')==false ){
+							$arrItem_tr.show();
+						}else{
+							$arrItem_tr.hide();
+						} 
+					
+					// Exlcuyo los tipo ='hidden' porque no puedo mostrarlos.  
+					if($arrItem.attr("type") != 'hidden'){
+						
+					}
+				}
+			);		
+		}catch(ex){ alert(ex);}
+	}
+
+	var obtenerOpcionesCombo_campos = function(
+			$combo,
+			nombreTabla,
+			arrRegistros,
+			nroQue){
+		var resultado = new Array();
+		try{
+			var campo_nombre = '' ;
+			var id_nombre = '' ;
+			
+			switch( nombreTabla ){
+				case 'ataques':
+					campo_nombre = 'ataque' ;
+					id_nombre = 'id' ;
+				break;
+				case 'cartas_magnitudes':
+					campo_nombre = 'magnitud' ;
+					id_nombre = 'id' ;
+				break;
+				case 'efectos_que_tipos':
+					campo_nombre = 'nombre' ;
+					id_nombre = 'id' ;
+				break;	
+				case 'tipos_contenedores':
+					campo_nombre = 'tipo' ;
+					id_nombre = 'id' ;
+				break;	
+				case 'efectos_como_logica':
+					campo_nombre = 'logica' ;
+					id_nombre = 'id' ;
+				break;	
+				case 'efectos_que_jugadores':
+					campo_nombre = 'descripcion' ;
+					id_nombre = 'id_orden' ;
+				break;	
+				
+			}
+			
+			agregarOpcionCombo($combo,null,' ( seleccione ) ');
+			for (arrRegistros_key in arrRegistros) {
+				var arrValores = arrRegistros[arrRegistros_key] ;
+
+				if( typeof arrValores === "undefined" ){
+				
+				}else{
+					var id_valor = null ;
+					var campo_valor = null ;
+
+					for (arrValores_key in arrValores) {
+						id_valor  = arrValores[id_nombre] ;
+						campo_valor  = arrValores[campo_nombre] ;				
+					}	
+					if(id_valor != null && campo_valor != null){
+						var incluir_item = false;
+						switch( nombreTabla ){
+							case 'efectos_como_logica':
+								if(arrValores['tipo']==$("#efecto_condicion").val()){
+									incluir_item = true;
+								}
+							break;
+							case 'efectos_que_tipos':
+								if(arrValores[$("#efecto_condicion").val()] == 1){
+									incluir_item = true;
+								}
+							break;						
+							default: 
+								incluir_item = true;
+						}
+						var opcion = null;
+						if(incluir_item){
+							resultado[id_valor] = campo_valor;
+							opcion = agregarOpcionCombo($combo,id_valor,campo_valor);
+							// Anexo todas las filas a posiciones de memoria
+							for (arrValores_key in arrValores) {
+								jQuery.data(opcion,arrValores_key,arrValores[arrValores_key]);
+							}
+						}
+					} 
+				} 
+			}		
+		}catch(ex){
+			alert(ex);
+		}	
+		return resultado ;
+	}
+	var obtenerOpcionesCombo = function(nombreTabla,$combo){
+		try{
+			$combo.find('option').remove() ;
+			agregarOpcionCombo($combo,null,' ( cargando... ) ');
+			$combo.attr('disabled', 'disabled');
+			
+			$.ajax({  
+				url:"obtener_opciones.php",
+				type: "get",  
+				data: { tabla: nombreTabla},
+				error:function(){
+					try{
+						$combo.find('option').remove() ;
+						agregarOpcionCombo($combo,null,' ( ERROR ) ');						
+					}catch(ex){alert(ex);}
+				},
+				success: function(json) {
+					try{
+						if(json.obtener_opciones){
+							var nroQue = 0;
+							if($combo.hasClass("que1")) nroQue=1; else if($combo.hasClass("que2")) nroQue=2;
+							
+							$combo.find('option').remove() ;
+							
+							obtenerOpcionesCombo_campos(
+								$combo,
+								nombreTabla,
+								json.obtener_opciones,
+								nroQue);
+							//agregarOpcionesCombo($combo,arrValores);
+							
+							$combo.removeAttr('disabled');
+						}else{
+							var msg_alerta = '' ;
+							msg_alerta += 'Hubo un problema al intentar cargar el combo ' ;
+							msg_alerta += $combo.attr('id') ;
+							msg_alerta += ' con ' ;
+							msg_alerta += nombreTabla ;
+							msg_alerta += '. Motivo:' ;
+							msg_alerta += json.motivo ;
+							alert( msg_alerta );
+						}
+					}catch(ex){
+						alert(ex);
+					}
+				},
+				dataType:'json'
+			});			
+		}catch(ex){ alert(ex) ;}
+	}
+	
+	var EjecutarCabmiosEnInputs = function($input){
+		try{
+			if($input.val()=='null' ) {
+				// Si el valor del combo cambio a nulo , entonces no muestro los controles siguientes.
+				ajustarVisibilidadControles($input);
+			} else {
+				var $input_siguiente ;
+				switch($input.attr('name')){
+					case 'efecto_condicion_check':					
+						$("#efecto_condicion").val( $input.val() );
+						$input_siguiente = $("#efectos_como_logica") ;
+						obtenerOpcionesCombo('efectos_como_logica',$input_siguiente);
+						ajustarVisibilidadControles($input_siguiente);
+					break;
+					case 'efectos_como_logica':
+						$input_siguiente = $("#que_tipo") ;
+						obtenerOpcionesCombo('efectos_que_tipos',$input_siguiente);
+						ajustarVisibilidadControles($input_siguiente);
+					break;	
+					case 'que_tipo':
+						var dataRow_que_tipo = obtenerDataComboSelectedOption($input) ;
+						if(dataRow_que_tipo['admite_valor_personalizado']==0){
+							$("#valor_seleccion_auto").attr('disabled',true);
+							$("#valor_seleccion_manual").attr('disabled',true);
+							$("#valor_seleccion_auto").prop('checked', true);
+							EjecutarCabmiosEnInputs($("#valor_seleccion_auto"));
+						} else {
+							$("#valor_seleccion_auto").removeAttr('disabled');
+							$("#valor_seleccion_manual").removeAttr('disabled');
+							$("#valor_seleccion_auto").prop('checked', false);
+							$("#valor_seleccion_manual").prop('checked', false);
+							ajustarVisibilidadControles($("#valor_seleccion_manual"));
+						}
+						  					
+					break;
+					case 'valor_seleccion':
+						var $que1_valor = $("#que1_valor") ;
+						var $que1_jugador = $("#que1_jugador") ;
+						
+						if($input.val() == 'auto'){ // Le paso el valor del combo al TEXTBOX
+							$que1_valor.attr('type','hidden');
+							$que1_valor.addClass('ocultar');							
+							$input_siguiente = $que1_jugador ;
+							obtenerOpcionesCombo('efectos_que_jugadores',$input_siguiente);
+							
+							$que1_jugador.removeClass('ocultar');
+							$('#que1_valor_combo').removeClass('ocultar');
+							
+						} else {
+							$que1_valor.attr('type','text');
+							$que1_valor.removeClass('ocultar');
+							$que1_valor.val('');
+							$input_siguiente = $que1_valor ;
+							
+							$que1_jugador.addClass('ocultar');
+							$('#que1_valor_combo').addClass('ocultar');						
+						}
+						ajustarVisibilidadControles($input_siguiente); 
+					break;					
+					case 'que1_jugador':
+						var dataRow_que_tipo = obtenerDataComboSelectedOption($("#que_tipo")) ;
+						$input_siguiente = $("#que1_valor_combo") ;
+						obtenerOpcionesCombo(dataRow_que_tipo['tabla'],$input_siguiente);
+						ajustarVisibilidadControles($input_siguiente);
+					break;	
+					case 'que1_valor_combo':
+						$('#que1_valor').val($input.val()); // Le paso el valor del combo al TEXTBOX
+						$input_siguiente = $("#que2_jugador") ;
+						obtenerOpcionesCombo('efectos_que_jugadores',$input_siguiente);					
+						ajustarVisibilidadControles($input_siguiente);
+					break;
+					case 'que1_valor':
+						if($input.val() != ''){
+							$input_siguiente = $("#que2_jugador") ;
+							obtenerOpcionesCombo('efectos_que_jugadores',$input_siguiente);					
+							ajustarVisibilidadControles($input_siguiente);
+						}else{
+							ajustarVisibilidadControles($input);
+						}
+					break;					
+					case 'que2_jugador':
+						
+						var dataRow_que_tipo = obtenerDataComboSelectedOption($("#que_tipo")) ;
+						var $que2_valor_combo = $("#que2_valor_combo") ;
+						if(dataRow_que_tipo['necesita_magnitud'] == 1){
+							$input_siguiente = $que2_valor_combo
+							$que2_valor_combo.removeClass('ocultar');
+							obtenerOpcionesCombo(dataRow_que_tipo['tabla'],$input_siguiente);
+						}else{
+							$que2_valor_combo.addClass('ocultar');
+							$input_siguiente = $("#submit") ;
+						}
+						ajustarVisibilidadControles($input_siguiente);
+					break;
+					case 'que2_valor_combo': 
+						$input_siguiente = $("#submit") ;
+						ajustarVisibilidadControles($input_siguiente);
+					break;
+					case 'submit': 
+						EnviarDatos($("#form_soporte"));
+					break;					
+				}
+			}
+			//alert('Type: ' + $input.attr('type') + 'Name: ' + $input.attr('name') + 'Value: ' + $input.val());
+		}catch(ex){ alert(ex) ;}	
+	}
+	
+	var EnviarDatos = function($formulario){
+		$( "#parametros" ).text( $formulario.serialize() );
+		$.ajax({  
+			url:"soporte.php",
+			type: "post",  
+			data: $formulario.serialize(),
+			error:function(xhr, status, error) {
+				try{
+					alert(xhr.responseText);
+				} catch(ex) { alert(ex) }
+			},
+			success: function(json) {
+				try{
+					if(json.ex){
+						alert(json.ex_msg);
+					}else{
+						alert(json.agregarEfectoCondicion_id);
+					}
+					
+					$("#form_soporte").each (function() { this.reset(); });
+					ajustarVisibilidadControles($(".efecto_condicion input"));
+				}catch(ex){
+					alert(ex);
+				}
+			},
+			dataType:'json'
+		});
+	}	
+	
+	///////////////////////////////////////////////////
+	// EVENTOS
+	///////////////////////////////////////////////////
+	var efecto_condicion_change = function(event){
+		try{
+			var $input = $(this) ;
+			EjecutarCabmiosEnInputs($input);
+			//alert('Type: ' + input.attr('type') + 'Name: ' + input.attr('name') + 'Value: ' + input.val());
+		}catch(ex){ alert(ex) ;}
+	}
+	
+
+	
+	$(function() { 
+		try{
+		
+			$("#form_soporte").submit(function() { 
+				return false; 
+			});
+			
+			$('#condicion_que1_nro_cartas').keydown(function(e) {    
+			  // Admite [0-9], BACKSPACE y TAB  
+			  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105) && e.keyCode != 8 && e.keyCode != 9)  
+				  e.preventDefault();  
+			});
+			$('#condicion_que2_nro_cartas').keydown(function(e) {    
+			  // Admite [0-9], BACKSPACE y TAB  
+			  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105) && e.keyCode != 8 && e.keyCode != 9)  
+				  e.preventDefault();  
+			});
+			$('#nro_veces_valor').keydown(function(e) {    
+			  // Admite [0-9], BACKSPACE y TAB  
+			  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105) && e.keyCode != 8 && e.keyCode != 9)  
+				  e.preventDefault();  
+			});
+			$('#que1_valor').keydown(function(e) {    
+			  // Admite [0-9], BACKSPACE y TAB  
+			  if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105) && e.keyCode != 8 && e.keyCode != 9)  
+				  e.preventDefault();  
+			});			
+
+			// Recorro los elementos del formulario
+			$('form input, form select').each(
+				function(index){  
+					var $input = $(this);
+					// Capturo los eventos de edición
+					$input.bind("change",{sender:this}, efecto_condicion_change);	
+					if ($input.attr('type') == 'submit' ) {
+						$input.bind("click",{sender:this}, efecto_condicion_change);
+					}
+				}
+			);
+			
+			ajustarVisibilidadControles($(".efecto_condicion input"));
+		}catch(ex){ alert(ex) ;}	
+	});
+	</script> 
+</head>
+<body>
+	<form id="form_soporte" action="soporte.php" method="post">
+		<input type="hidden" name="crear_nuevo" value="1" />
+		<input type="hidden" name="efecto_condicion" id="efecto_condicion" />
+		<table id="form_soporte_tabla">
+			<tr class="efecto_condicion">
+				<td>Condicion / Efecto</td>
+				<td><input type="radio" name="efecto_condicion_check" value="condicion" checked="false" /><input type="radio" name="efecto_condicion_check" value="efecto" checked="false" /></td>
+			</tr>
+			<tr class="efectos_como_logica">
+				<td>Tipo</td>
+				<td><select id="efectos_como_logica" name="efectos_como_logica" ></select></td>
+			</tr>			
+			<tr>
+				<td>Objecto</td>
+				<td><select class="que1" id="que_tipo" name="que_tipo"></select></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>Valor preseleccionado<input value="auto" id="valor_seleccion_auto" name="valor_seleccion" type="radio" checked="false" /><input value="manual" name="valor_seleccion" id="valor_seleccion_manual" type="radio" checked="false" />Valor manual</td>
+			</tr>
+			<tr>
+				<td>Jugador A</td>
+				<td><select class="que1" id="que1_jugador" name="que1_jugador"></select></td>
+			</tr>			
+			<tr>
+				<td>Valor Combo</td>
+				<td><select class="que1" id="que1_valor_combo" name="que1_valor_combo"></select></td>
+			</tr>
+			<tr>
+				<td>Valor Fijo</td>
+				<td><input class="que1" type="hidden" name="que1_valor" id="que1_valor" value="" /></td>
+			</tr>
+			
+			<tr>
+				<td>Jugador B</td>
+				<td><select class="que2" id="que2_jugador" name="que2_jugador"></select></td>
+			</tr>
+			<tr>
+				<td>Valor Combo</td>
+				<td><select class="que2" id="que2_valor_combo" name="que2_valor_combo"></select></td>
+			</tr>
+			<tr class="efecto_condicion">
+				<td>Finalizar</td>
+				<td><input name="submit" type="submit" value="Agregar" /> </td>
+			</tr>			
+		</table>
+
+		<p id="parametros"></p>
+		
+	</form>
+</body>
+</html>

@@ -1,0 +1,122 @@
+div.contenedor {
+	background-color:white;
+	position:absolute;
+	border-style:solid;
+	border-width:1px;
+	width: 70px;
+	height: 100px;
+} 
+div.contenedor:hover{
+	z-index:1;
+}
+
+div.contenedor  div:first-child { 
+	position:relative;
+	width:100%;
+	height:100%;
+}
+
+.carta_oculta  {
+	background-image:url('img/reverso_naipe.jpg');
+}
+
+.carta_fallo  {
+	cursor:pointer; 
+}
+
+.jugador1 .carta_activa div.contenedor {
+	left:100px; 
+}
+
+.jugador1 .carta_soporte div.contenedor {
+	left:200px; 
+}
+
+.jugador2 .carta_activa div.contenedor {
+	left:300px; 
+}
+
+.jugador2 .carta_soporte div.contenedor {
+	left:400px; 
+}
+
+.carta_soporte  div.contenedor , .carta_activa  div.contenedor{
+	top:150px;
+}
+
+.jugador1 .carta_evolucion div.contenedor {
+	left:10px; 
+}
+
+.jugador2 .carta_evolucion div.contenedor {
+	left:500px;  
+}
+
+.jugador1 .cartas_mano div.contenedor {
+	top:10px; 
+}
+
+.jugador2 .cartas_mano div.contenedor {
+	top:300px;  
+}
+
+.contenedor.mano1 {
+	left:100px;  
+}
+
+.contenedor.mano2 {
+	left:200px;  
+}
+
+.contenedor.mano3 {
+	left:300px;  
+}
+
+.contenedor.mano4 {
+	left:400px;  
+}
+
+#visualizador_cartas { 
+	background-color:white;
+	border-style:solid;
+	border-width:1px;
+	position: absolute;
+	top: 410px;
+	left: 100px;
+	width:400px;
+	z-index:1;
+	display:none;
+}
+
+#visualizador_cartas td {
+	font-size:small ;
+}
+
+.draggable {
+	cursor:pointer;
+}
+
+.dropeable { 
+	border-color:#ff0000 #0000ff;
+}
+
+#visor_etapa{
+	position: absolute;
+	top:410px;
+	left:10px;
+	border-style:solid;
+	border-width:1px;
+	cursor:pointer;	
+}
+
+#etapa_id {
+	display:none;
+}
+
+#etapa_texto {
+
+}
+
+#turno_jugador {
+
+}

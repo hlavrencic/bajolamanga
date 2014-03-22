@@ -1,0 +1,9 @@
+2014-03-21 22:22:11 Error: [MissingControllerException] Controller class File-managerController could not be found.
+Exception Attributes: array (
+  'class' => 'File-managerController',
+  'plugin' => NULL,
+)
+Request URL: /_file-manager/index.php?action=ping
+Stack Trace:
+#0 /home/u931227509/public_html/app/webroot/index.php(108): Dispatcher->dispatch(Object(CakeRequest), Object(CakeResponse))
+#1 {main}
